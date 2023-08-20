@@ -1,13 +1,47 @@
-import React from 'react'
 import styled from 'styled-components'
 import Octicon from 'react-octicon'
+import { getGistForUser, getPublicGists } from '../services/gistService'
+import { useDispatch } from 'react-redux'
+import { setGistList, setLoading } from '../store/slices/gistSlice'
 
 const Search = () => {
+
+ const dispatch =  useDispatch();
+
+  let timer;
+  const waitTime = 1000
+  const handleChange = (e) => {
+    clearTimeout(timer)
+    dispatch(setLoading(true))
+    timer = setTimeout(() => {
+      if(e.target.value) {
+        getGistForUser(e.target.value).then((result) => {
+            dispatch(setGistList(result.data))
+            dispatch(setLoading(false))
+        })
+        .catch((error) => {
+          dispatch(setLoading(false))
+            dispatch(setGistList([]))
+        })
+
+      } else {
+        getPublicGists().then((result) => {
+            dispatch(setGistList(result.data))
+            
+        })
+        .catch((error) => {
+            dispatch(setGistList([]))
+            dispatch(setLoading(false))
+        })
+      }
+    },[waitTime])
+  }
+
   return (
     <Wrapper>
       <InputBox>
       <Octicon name="search" />
-      <Input placeholder="Search Gists for the username"/>
+      <Input placeholder="Search Gists for the username" onChange={(e) => handleChange(e)}/>
       </InputBox>
     </Wrapper>
   )
